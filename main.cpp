@@ -1,184 +1,320 @@
-//
-//  main.cpp
-//  Lab2_prof
-//
-//  Created by 백정현 on 2/14/23.
-//
+/*******************************************************
+
+ * Program Name: <Lab3 Smart Home Solutions>
+
+ * Author: <Junghyun Baik>
+
+ * Date: <March 10, 2023>
+
+ * Description: <Smart-Home Solutions>
+
+ *******************************************************/
 
 #include <iostream>
 #include <vector>
+#include <map>
+#include <string>
+#include <bitset>
+#include "menu (1).h"
+
 using namespace std;
 
-enum INPUT {
-    IN1 = '1',
-    IN2 = '2',
-    IN3 = '3',
-    IN4 = '4',
-    IN5 = '5',
-    IN6 = '6',
-    IN7 = '7',
-    IN8 = '8',
-    IN9 = '9'
+void addRules(vector<string>& rules);
+int selectOperator();
+int selectSmartDevice();
+void selectSmartDevices();
+void displayRules(vector<string>& rules);
+void displayArgumentForm(vector<string>& rules);
+void showDevices();
+int getOperator();
+void print_device_states();
+void set_device_state();
+vector<string> logicalArguments;
+vector<string> conditionalOperators;
+
+map<int, bool> devices_state = {
+    {65, false}, {66, false}, {67, false}, {68, false},
+    {69, false}, {70, false}, {71, false}, {72, false},
+    {73, false}, {74, false}, {75, false}, {76, false},
+    {77, false}, {78, false}, {79, false}, {80, false},
+    {81, false}, {82, false}, {83, false}, {84, false},
+    {85, false}, {86, false}, {87, false}, {88, false},
+    {89, false}, {90, false}
 };
-enum MULTIPLEX_4_1 {
-    _A = 0b01000001,
-    _B = 66,
-    _c = 0x43,
-    _D ='D'
-};
 
-struct Pair {
-    bool x;
-    bool y;
-};//for two input and two output.
+/*******************************************************
 
-int menu();
-bool doNot(bool);
-bool doAnd(bool, bool);
-bool doOr(bool, bool);
-bool doNand(bool, bool);
-bool doNor(bool, bool);
-bool doHalfAdder(Pair& xy, bool, bool);   // two input, two ouput.
-bool doFullAdder(Pair& xy, bool, bool, bool); //three input, two output.
+ * Function Name: <Binary to Demical>
 
-int doMultiplexe4to1(bool, bool);  //4to1 meaning: 다이어그램에 보면, 
+ * Purpose: <Function to convert binary to decimal>
 
-MULTIPLEX_4_1 doMultiplexer (Pair& xy);
+ * Return: <decimal>
+
+ *******************************************************/
+int bin_to_dec(string binary) {
+    bitset<8> bits(binary);
+    return bits.to_ulong();
+}
 
 
-struct VAR2 {      //2월 16일
-    int p,
-        q,
-        p_or_q,
-        p_and_q,    //output ccarry
-        not_p_and_q,
-        p_or_q__p_and_q; //output sum
-};
-void generateHalf(VAR2& _x);    //2/16
+/*******************************************************
 
+ * Function Name: <Binary to Hex>
+
+ * Purpose: <Function to convert binary to hex>
+
+ * Return: <Hex>
+
+ *******************************************************/
+string bin_to_hex(string binary) {
+    bitset<8> bits(binary);
+    return "0x" + bitset<8>(bits.to_ulong()).to_string().substr(4);
+}
+
+
+/*******************************************************
+
+ * Function Name: <on/off>
+
+ * Purpose: <Function to turn a device on/off>
+
+ * Return: <state>
+
+ *******************************************************/
+void set_device_state(int code, bool state) {
+    devices_state[code] = state;
+}
+
+/*******************************************************
+
+ * Function Name: <Main function>
+
+ *******************************************************/
 int main() {
+    Menu smartMenu("Smart-Home Control Hub");
+    smartMenu.addOption("Define rules");
+    smartMenu.addOption("Select the Condition");
+    smartMenu.addOption("Turn Smart-Device state");
+    smartMenu.addOption("Display rules");
+    smartMenu.addOption("Show table the device state on");
+    smartMenu.addOption("Show table the device state off");
+    smartMenu.addOption("Exit");
+    
     int input = -1;
-    bool p=0, q=0, r=0;
-    Pair pair;
-    do {
-        input = menu();
-        switch (input) {
+    vector<string> rules;
+    
+    do{
+        input = smartMenu.doMenuIndex();
+        switch(input){
             case 1:
-                doNot(p);
-                //아웃풋으로 그림 1의 not 세모 옆에있는 표 나와야 함..
+                addRules(rules);
                 break;
             case 2:
-                doAnd(p, q);
+                getOperator();
+                
                 break;
             case 3:
-                doOr(p, q);
+                selectSmartDevices();
                 break;
-            case 4:
-                doNand(p, q);
+            case 4: {
+                // Show summary of the rules
+                if (logicalArguments.empty()) {
+                    cout << "No logical argument defined yet.\n";
+                } else {
+                    cout << " Summary of the Rules \n";
+                    for (int i = 0; i < conditionalOperators.size(); i++) {
+                        cout << logicalArguments[i] << " " << conditionalOperators[i] << " ";
+                    }
+                    cout << logicalArguments.back() << endl;
+                }
                 break;
+            }
             case 5:
-                doNor(p, q);
+                print_device_states();
                 break;
             case 6:
-                doHalfAdder(pair, p, q);
+                print_device_states();
                 break;
             case 7:
-                doFullAdder(pair, p, q, r);
-                break;
-            case 8:
-                int out = doMultiplexer(pair);
-                break;
-            case 9:
                 break;
         }
-    } while (input >= 1 && input <= 9); //입력값이 1보다 같거나 크고 9보다 같거나 클 때까지
+    }while(input > 0 && input <= 6);
+}
+
+void addRules(vector<string>& rules){
+    string argument;
+    //loop
+    for(;;){
+        cout << "****** Define Logical Argument ******" << endl;
+        cout << "Define a statement: ";
+        cin.ignore();
+        getline(cin, argument);
+        logicalArguments.push_back(argument);
+        int oper = getOperator();
+        if (oper == 5){
+            break;
+        }
+    }
     
-    std::vector<std::string> words1{"the", "frogurt", "is", "also", "cursed"};  //2월 16일
-    vector<VAR2> truth_table_half_adder{
-        {0, 0, 0, 0, 0, 0},
-        {0, 1, 0, 0, 0, 0},
-        {1, 0, 0, 0, 0, 0},
-        {1, 1, 0, 0, 0, 0}
-    };
-    for (int i = 0; i <= 4; i++){
-        VAR2 var2;
-        var2.p = 0;
-        truth_table_half_adder;
+}
+
+int selectOperator() {
+    int sel = -1;
+    return sel;
+}
+
+int getOperator(){
+    Menu oper("Select Conditional Operator");
+    oper.addOption("AND");  //&&
+    oper.addOption("OR");   //||
+    oper.addOption("NOT");  //~
+    oper.addOption("THEN"); //->
+    oper.addOption("Done with rule (Exit)");
+    
+    return oper.doMenuIndex();
+}
+
+
+int selectSmartDevice(){
+    Menu device_menu("List of Smart Devices");
+    device_menu.addOption("65 _ Air Purifier");
+    device_menu.addOption("66 _ Appliances");
+    device_menu.addOption("67 _ Blinds");
+    device_menu.addOption("68 _ Computer");
+    device_menu.addOption("69 _ Curtains");
+    device_menu.addOption("70 _ Door Locks");
+    device_menu.addOption("71 _ Door Sensors");
+    device_menu.addOption("72 _ Entertainment");
+    device_menu.addOption("73 _ Garage Door");
+    device_menu.addOption("74 _ Home Sensors");
+    device_menu.addOption("75 _ Indoor Plug");
+    device_menu.addOption("76 _ Indoor Security Camera");
+    device_menu.addOption("77 _ Lawn Sprinkler Controller");
+    device_menu.addOption("78 _ Light");
+    device_menu.addOption("79 _ Light Bulbs");
+    device_menu.addOption("80 _ Meter");
+    device_menu.addOption("81 _ Outdoor Security Camera");
+    device_menu.addOption("82 _ Oven");
+    device_menu.addOption("83 _ Robot Vacuum");
+    device_menu.addOption("84 _ Siren");
+    device_menu.addOption("85 _ Smart Lock");
+    device_menu.addOption("86 _ Smoke & CO2 Detectors");
+    device_menu.addOption("87 _ Speaker");
+    device_menu.addOption("88 _ Thermostats");
+    device_menu.addOption("89 _ Video Doorbell");
+    device_menu.addOption("90 _ Window Sensors");
+    
+    return device_menu.doMenuIndex();
+    
+}
+
+void selectSmartDevices(){
+    // select one or more devices
+    int index = -1;
+    char ch = 'N';
+    while(true){
+        index = selectSmartDevice();
+        cout << "Turn more Devices on (Y/N) : ";
+        cin >> ch;
+        if (ch == 'N' || ch == 'n'){
+            break;
+        }
     }
 }
 
+/*******************************************************
 
+ * Function Name: <Print state>
 
-int menu() {
-    //enum 사용해도 되고, int와 char를 모두 쓸 수 있는거,, string convert to num
-    
-    cout << "Basic Digital Logic Gates" << endl;
-    cout << "=========================" << endl;
-    cout << " 1 - NOT gate" << endl;
-    cout << " 2 - AND gate" << endl;
-    cout << " 3 - OR gate" << endl;
-    cout << " 4 - NAND gate" << endl;
-    cout << " 5 - NOR gate" << endl;
-    cout << " 6 - Half-adder (see diagram)" << endl;
-    cout << " 7 - Full-adder (see diagram)" << endl;
-    cout << " 8 - Multiplexer 4 to 1 (2 switch variables as selectors for 4 inputs and 1 output; see diagram)" << endl;
-    cout << " 9 - Exit" << endl;
-    
-    int input;
-    cout << "\n Enter choice: ";
-    cin >> input;
-    
-    return input;
-}
+ * Purpose: <Function to print the state of all devices>
 
+ * Return: <state>
 
-bool doNot(bool){
-    return true;
-    
-}
-bool doAnd(bool, bool){
-    return true;
-    
-}
-bool doOr(bool, bool){
-    return true;
-    
-}
-bool doNand(bool, bool){
-    return true;
-}
-bool doNor(bool, bool){
-    return true;
-}
-bool doHalfAdder(Pair& xy, bool, bool){
-    return true;
-}  // two input, two ouput.
-
-bool doFullAdder(Pair& xy, bool, bool, bool){
-    return true;
-} //three input, two output.
-
-int doMultiplexe4to1(bool, bool){
-    //return 1 for A, 2 for B, 3 for C, 4 for D
-    
-    return -1;
-}  //4to1 meaning: 다이어그램에 보면,
-
-MULTIPLEX_4_1 doMultiplexer(Pair& xy){
-    //return 1 for A, 2 for B, 3 for C, 4 for D
-    char Q = static_cast <char>(65);    //i.e (int) 65
-    if (!xy.x && !xy.y) { //FF
-        Q = 65;
+ *******************************************************/
+void print_device_states() {
+    cout << "Code\t Device Name\t State\n";
+    for (auto const& [code, state] : devices_state) {
+        cout << code << "\t";
+        switch (code) {
+            case 65:
+                cout << "Air Purifier\t";
+                break;
+            case 66:
+                cout << "Appliances\t";
+                break;
+            case 67:
+                cout << "Blinds\t\t";
+                break;
+            case 68:
+                cout << "Computer\t";
+                break;
+            case 69:
+                cout << "Curtains\t";
+                break;
+            case 70:
+                cout << "Door Locks\t";
+                break;
+            case 71:
+                cout << "Door Sensors\t";
+                break;
+            case 72:
+                cout << "Entertainment\t";
+                break;
+            case 73:
+                cout << "Garage Door\t";
+                break;
+            case 74:
+                cout << "Home Sensors\t";
+                break;
+            case 75:
+                cout << "Indoor Plug\t";
+                break;
+            case 76:
+                cout << "Indoor Security Camera\t";
+                break;
+            case 77:
+                cout << "Lawn Sprinkler Controller\t";
+                break;
+            case 78:
+                cout << "Light\t";
+                break;
+            case 79:
+                cout << "Light Bulbs\t";
+                break;
+            case 80:
+                cout << "Meter\t";
+                break;
+            case 81:
+                cout << "Outdoor Security Camera\t";
+                break;
+            case 82:
+                cout << "Oven\t";
+                break;
+            case 83:
+                cout << "Robot Vacuum\t";
+                break;
+            case 84:
+                cout << "Siren\t";
+                break;
+            case 85:
+                cout << "Smart Lock\t";
+                break;
+            case 86:
+                cout << "Smoke & CO2 Detectors\t";
+                break;
+            case 87:
+                cout << "Speaker\t";
+                break;
+            case 88:
+                cout << "Thermostats\t";
+                break;
+            case 89:
+                cout << "Video Doorbell\t";
+                break;
+            case 90:
+                cout << "Window Sensors\t";
+                break;
+        }
+        cout << state << endl;
     }
-    else if (!xy.x && xy.y) {   //FT
-        Q = 66;
-    }
-    else if (xy.x && !xy.y) {   //TF
-        Q = 0b01000011; //원래 67이었음. FTFFFFTT
-    }
-    else if (xy.x && xy.y) { //TT
-        Q =68;
-    }
-    
-    return (MULTIPLEX_4_1) Q;
 }
